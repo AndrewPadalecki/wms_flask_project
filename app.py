@@ -11,19 +11,23 @@ PORT = int(os.environ.get('PORT', 5000))
 APP_PASSWORD = os.environ.get('APP_PASSWORD', 'admin')  # обязательно поменяй
 
 def load_stats():
+    """
+    Загружает статистику по сотрудникам из 12-й колонки Excel.
+    Всегда берём 12-ю колонку (индекс 11), очищаем название.
+    """
     try:
         df = pd.read_excel(EXCEL_PATH, engine='openpyxl')
     except Exception as e:
         return {'error': f'Не удалось открыть Excel: {e}', 'data': []}
 
-    # Берём 12-ю колонку (индекс 11) и очищаем название
+    # Берём 12-ю колонку
     try:
         col = df.columns[11]
         col = str(col).strip().replace("\xa0", "")  # убираем пробелы и невидимые символы
     except IndexError:
         return {'error': 'В Excel нет 12-й колонки', 'data': []}
 
-    # Для отладки: выводим все колонки
+    # Отладка: выводим все колонки
     print("Все колонки Excel:", [str(c) for c in df.columns])
     print("Используемая колонка:", col)
 
