@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Статистика — задания</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 12px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background: #f3f3f3; }
+    #chartWrap { height: 320px; }
+  </style>
+</head>
+<body>
+  <h2>Статистика выполненных заданий</h2>
+  <div>
+    <button id="refreshBtn">Обновить</button>
+    Автообновление:
+    <select id="autorefresh">
+      <option value="0">Выкл</option>
+      <option value="30">30 s</option>
+      <option value="60" selected>60 s</option>
+    </select>
+    <a href="/logout" style="margin-left:20px;">Выйти</a>
+  </div>
+
+  <div id="chartWrap"><canvas id="chart"></canvas></div>
+
+  <table id="statsTable">
+    <thead><tr><th>Сотрудник</th><th>Количество</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+<script>
+let chart = null;
+async function loadData(){
+  const r = await fetch('/data');
+  if(r.status === 401){ window.location = '/login'; return; }
+  const j = await r.json();
+  if(j.error){ alert('Ошибка: ' + j.error); return; }
+  const data = j.data;
+  const labels = data.map(x=>x.employee);
+  const values = data.map(x=>x.count);
+
+  const tbody = document.querySelector('#statsTable tbody');
+  tbody.innerHTML = '';
+  data.forEach(row=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${row.employee}</td><td>${row.count}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  if(chart) chart.destroy();
+  const ctx = document.getElementById('chart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: labels, datasets: [{ label: 'Количество', data: values }]},
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+}
+
+document.getElementById('refreshBtn').addEventListener('click', loadData);
+let timer = null;
+document.getElementById('autorefresh').addEventListener('change', (e)=>{
+  if(timer) clearInterval(timer);
+  const sec = Number(e.target.value);
+  if(sec>0) timer = setInterval(loadData, sec*1000);
+});
+loadData();
+</script>
+</body>
+</html>
