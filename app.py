@@ -7,7 +7,7 @@ app.secret_key = os.environ.get('SECRET_KEY', 'change-me-please')  # помен�
 
 # Настройки
 EXCEL_PATH = os.environ.get('EXCEL_PATH', 'data/report.xlsx')
-EMPLOYEE_COLUMN = os.environ.get('EMPLOYEE_COLUMN', 'Сотрудник')
+EMPLOYEE_COLUMN = os.environ.get('EMPLOYEE_COLUMN', 'Испонитель')
 PORT = int(os.environ.get('PORT', 5000))
 APP_PASSWORD = os.environ.get('APP_PASSWORD', 'admin')  # обязательно поменяй
 
@@ -71,3 +71,4 @@ def logout():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT)
+
