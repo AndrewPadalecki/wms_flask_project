@@ -16,11 +16,16 @@ def load_stats():
     except Exception as e:
         return {'error': f'Не удалось открыть Excel: {e}', 'data': []}
 
-    # Берём 12-ю колонку (индекс 11)
+    # Берём 12-ю колонку (индекс 11) и очищаем название
     try:
         col = df.columns[11]
+        col = str(col).strip().replace("\xa0", "")  # убираем пробелы и невидимые символы
     except IndexError:
         return {'error': 'В Excel нет 12-й колонки', 'data': []}
+
+    # Для отладки: выводим все колонки
+    print("Все колонки Excel:", [str(c) for c in df.columns])
+    print("Используемая колонка:", col)
 
     # Генерация статистики
     stats = df.groupby(col).size().reset_index(name='count')
