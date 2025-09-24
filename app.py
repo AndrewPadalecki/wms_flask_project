@@ -3,35 +3,33 @@ from flask import Flask, render_template, jsonify, request, session, redirect, u
 import pandas as pd
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'change-me-please')  # поменяй в окружении
+app.secret_key = os.environ.get('SECRET_KEY', 'change-me-please')
 
 # Настройки
 EXCEL_PATH = os.environ.get('EXCEL_PATH', 'data/report.xlsx')
 PORT = int(os.environ.get('PORT', 5000))
-APP_PASSWORD = os.environ.get('APP_PASSWORD', 'admin')  # обязательно поменяй
+APP_PASSWORD = os.environ.get('APP_PASSWORD', 'admin')
 
 def load_stats():
-    """
-    Загружает статистику по сотрудникам из 12-й колонки Excel.
-    Всегда берём 12-ю колонку (индекс 11), очищаем название.
-    """
     try:
         df = pd.read_excel(EXCEL_PATH, engine='openpyxl')
     except Exception as e:
         return {'error': f'Не удалось открыть Excel: {e}', 'data': []}
 
-    # Берём 12-ю колонку
+    # Берём 12-ю колонку по индексу 11
     try:
-        col = df.columns[11]
-        col = str(col).strip().replace("\xa0", "")  # убираем пробелы и невидимые символы
+        col = df.columns[11]  # 12-я колонка
     except IndexError:
         return {'error': 'В Excel нет 12-й колонки', 'data': []}
 
-    # Отладка: выводим все колонки
-    print("Все колонки Excel:", [str(c) for c in df.columns])
+    # Очистка колонок от пробелов и невидимых символов
+    df.columns = [str(c).strip().replace("\xa0", "") for c in df.columns]
+    col = df.columns[11]  # теперь безопасно
+
+    # Отладка
+    print("Все колонки Excel:", list(df.columns))
     print("Используемая колонка:", col)
 
-    # Генерация статистики
     stats = df.groupby(col).size().reset_index(name='count')
     stats = stats.rename(columns={col: 'employee'})
     records = stats.to_dict(orient='records')
