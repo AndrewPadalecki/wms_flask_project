@@ -7,7 +7,6 @@ app.secret_key = os.environ.get('SECRET_KEY', 'change-me-please')  # помен�
 
 # Настройки
 EXCEL_PATH = os.environ.get('EXCEL_PATH', 'data/report.xlsx')
-EMPLOYEE_COLUMN = os.environ.get('EMPLOYEE_COLUMN', 'Испонитель')
 PORT = int(os.environ.get('PORT', 5000))
 APP_PASSWORD = os.environ.get('APP_PASSWORD', 'admin')  # обязательно поменяй
 
@@ -17,23 +16,14 @@ def load_stats():
     except Exception as e:
         return {'error': f'Не удалось открыть Excel: {e}', 'data': []}
 
-    # Ищем колонку с сотрудниками
-    col = None
-    candidates = [EMPLOYEE_COLUMN, 'Сотрудник', 'ФИО', 'Name', 'Employee']
-    for c in df.columns:
-        if str(c).strip() in candidates:
-            col = c
-            break
-    if col is None:
-        for c in df.columns:
-            low = str(c).lower()
-            if 'сотр' in low or 'фио' in low or 'name' in low or 'employee' in low:
-                col = c
-                break
-    if col is None:
-        return {'error': 'Не найден столбец с именем сотрудника.', 'data': []}
+    # Берём 12-ю колонку (индекс 11)
+    try:
+        col = df.columns[11]
+    except IndexError:
+        return {'error': 'В Excel нет 12-й колонки', 'data': []}
 
-    stats = df.groupby(col).size().reset_index(name='count').sort_values('count', ascending=False)
+    # Генерация статистики
+    stats = df.groupby(col).size().reset_index(name='count')
     stats = stats.rename(columns={col: 'employee'})
     records = stats.to_dict(orient='records')
     return {'error': None, 'data': records}
@@ -71,4 +61,3 @@ def logout():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT)
-
